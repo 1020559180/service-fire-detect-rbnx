@@ -1,10 +1,10 @@
-# 停止烟火实时监控：结束后台检测线程。
+# Stop the real-time fire & smoke monitor: end the background detection thread.
 [contract]
 id      = "robonix/service/fire_detect/stop_monitor"
 version = "1"
 kind    = "service"
 idl     = "fire_detect/srv/StopMonitor.srv"
-description = "停止烟火实时监控（结束后台检测线程）。"
+description = "Stop the real-time fire & smoke monitor (end the background detection thread)."
 
 [mode]
 type = "rpc"

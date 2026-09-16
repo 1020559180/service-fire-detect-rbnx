@@ -1,10 +1,10 @@
-# 检测无人机镜头当前画面中的烟火（火焰/烟雾），返回检测框；命中烟火时附带当前 GPS。
+# Detect fire & smoke (flame/smoke) in the drone camera's current frame, return detection boxes; attach the current GPS on a hit.
 [contract]
 id      = "robonix/service/fire_detect/fire_detect"
 version = "1"
 kind    = "service"
 idl     = "fire_detect/srv/FireDetect.srv"
-description = "检测无人机镜头当前画面中的烟火（火焰/烟雾），返回检测框；命中时附带当前 GPS 坐标。"
+description = "Detect fire & smoke (flame/smoke) in the drone camera's current frame, return detection boxes, and attach the current GPS coordinates on a hit."
 
 [mode]
 type = "rpc"

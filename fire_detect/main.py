@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MulanPSL-2.0
-"""fire_detect standalone REPL —— 不依赖 RoboNIX 框架的后端手动联调入口。
+"""fire_detect standalone REPL -- framework-free manual backend debugging entry point.
 
-驱动层（框架分发）在 ``driver.py``（`@vision.mcp` handler）。本文件是**独立测试
-REPL**，直接用 ``FireDetectBackend`` 拉流推理，用于在无框架环境下验证烟火检测。
+The driver layer (framework dispatch) lives in ``driver.py`` (the `@vision.mcp` handler). This file is a **standalone test
+REPL** that drives ``FireDetectBackend`` directly to grab frames and infer, for validating fire & smoke detection without the framework.
 
-运行:
+Run:
     RC_PRO_IP=<ip> FIRE_MODEL_PATH=<weights> python3 -m fire_detect.main
 """
 from __future__ import annotations
@@ -26,8 +26,8 @@ _MODEL = os.environ.get("FIRE_MODEL_PATH", "")
 
 def main() -> None:
     backend = FireDetectBackend(_HOST, _PORT, model_path=_MODEL)
-    print(f"[fire_detect] 目标: {backend.video_url}")
-    print("命令: ping | detect [conf] | start [conf] | state | stop | q/quit/exit\n")
+    print(f"[fire_detect] target: {backend.video_url}")
+    print("commands: ping | detect [conf] | start [conf] | state | stop | q/quit/exit\n")
 
     while True:
         try:
@@ -57,7 +57,7 @@ def main() -> None:
         if cmd == "stop":
             print(json.dumps(backend.stop_monitor(), ensure_ascii=False, indent=2))
             continue
-        print("未知命令（ping | detect [conf] | start [conf] | state | stop）")
+        print("unknown command (ping | detect [conf] | start [conf] | state | stop)")
 
 
 if __name__ == "__main__":

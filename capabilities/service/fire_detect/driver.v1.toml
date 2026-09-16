@@ -1,10 +1,10 @@
-# 生命周期契约：rbnx boot 通过 Driver(CMD_INIT) 拉起烟火检测驱动。
+# Lifecycle contract: rbnx boot starts the fire & smoke detection driver via Driver(CMD_INIT).
 [contract]
 id      = "robonix/service/fire_detect/driver"
 version = "1"
 kind    = "service"
 idl     = "lifecycle/srv/Driver.srv"
-description = "fire_detect 烟火检测原语生命周期管理。"
+description = "Lifecycle management for the fire_detect fire & smoke detection primitive."
 
 [mode]
 type = "rpc"

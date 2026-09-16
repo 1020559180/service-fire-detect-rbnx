@@ -1,3 +1,3 @@
-float64 min_confidence  # 置信度阈值（0~1），低于此值的检测结果被过滤；<=0 时用配置默认值
+float64 min_confidence  # confidence threshold (0~1); detections below it are filtered out; <=0 means use the configured default
 ---
 std_msgs/String status  # JSON: {"success":..., "detections":[{"class","confidence","bbox":[x,y,w,h]}], "gps":{...}|null, ...}

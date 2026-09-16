@@ -1,10 +1,10 @@
-# 读取烟火实时监控的最新结果（含 alert/检测框/GPS/时间戳），供外部循环轮询。
+# Read the latest result of the real-time fire & smoke monitor (alert / detection boxes / GPS / timestamp), for polling by an external loop.
 [contract]
 id      = "robonix/service/fire_detect/monitor_state"
 version = "1"
 kind    = "service"
 idl     = "fire_detect/srv/MonitorState.srv"
-description = "读取烟火实时监控的最新检测结果（alert/detections/gps/timestamp），外部循环轮询用。"
+description = "Read the latest result of the real-time fire & smoke monitor (alert/detections/gps/timestamp), for polling by an external loop."
 
 [mode]
 type = "rpc"

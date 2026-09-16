@@ -1,10 +1,10 @@
-# 启动烟火实时监控：后台线程持续拉取视频帧并推理，最新结果由 monitor_state 轮询读取。
+# Start the real-time fire & smoke monitor: a background thread keeps grabbing frames and inferring; the latest result is read by polling monitor_state.
 [contract]
 id      = "robonix/service/fire_detect/start_monitor"
 version = "1"
 kind    = "service"
 idl     = "fire_detect/srv/StartMonitor.srv"
-description = "启动烟火实时监控（后台持续拉帧推理），配合 monitor_state 轮询实时告警。"
+description = "Start the real-time fire & smoke monitor (background continuous frame inference); pair with monitor_state polling for real-time alerts."
 
 [mode]
 type = "rpc"

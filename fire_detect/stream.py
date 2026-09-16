@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MulanPSL-2.0
-"""fire_detect 实时可视化 —— 带检测框/结果的 MJPEG 标注流服务。
+"""fire_detect real-time visualization -- MJPEG annotated-stream service with detection boxes / results.
 
-两种用法：
-  1) 独立运行： RC_PRO_IP=<ip> python3 -m fire_detect.stream [--port 8081] [--conf 0.25]
-  2) 随原语启动： driver.py 的 on_init 里 new AnnotatedStreamer(backend) 并 start()，
-     这样 rbnx boot 启动 fire_detect 时，web 可视化自动一并起来（边检测边画框）。
+Two ways to use it:
+  1) Standalone: RC_PRO_IP=<ip> python3 -m fire_detect.stream [--port 8081] [--conf 0.25]
+  2) Start with the primitive: in driver.py's on_init, construct AnnotatedStreamer(backend) and start(),
+     so when rbnx boot starts fire_detect the web visualization comes up automatically (drawing boxes as it detects).
 
-Web 端:  http://localhost:8081/
-流:      http://<本机IP>:8081/stream   火检标注流 (MJPEG)
-火检:    http://localhost:8081/state   最新火检结果 (JSON)
-遥控器:  http://localhost:8081/rc      遥控器/无人机完整状态 (JSON，含自动发现的 APK 地址)
+Web UI:  http://localhost:8081/
+Stream:  http://<host IP>:8081/stream   fire-detection annotated stream (MJPEG)
+Fire:    http://localhost:8081/state   latest fire-detection result (JSON)
+RC:      http://localhost:8081/rc      full RC / drone status (JSON, including the auto-discovered APK address)
 """
 from __future__ import annotations
 
@@ -26,15 +26,15 @@ import numpy as np
 
 from .backend import FireDetectBackend
 
-_FIRE_COLOR = (0, 0, 255)     # BGR 红 —— fire
-_SMOKE_COLOR = (0, 165, 255)  # BGR 橙 —— smoke
+_FIRE_COLOR = (0, 0, 255)     # BGR red -- fire
+_SMOKE_COLOR = (0, 165, 255)  # BGR orange -- smoke
 
 _HTML = """<!DOCTYPE html>
 <html lang="zh">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>无人机实时反馈</title>
+<title>Drone real-time feedback</title>
 <style>
   body{background:#111;color:#eee;font-family:Consolas,Menlo,monospace;margin:0;padding:16px}
   h1{font-size:16px;font-weight:normal;color:#ffc;margin:0 0 4px}
@@ -48,33 +48,33 @@ _HTML = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <h1>🛸 无人机实时反馈</h1>
-  <div id="conn">连接中…</div>
+  <h1>🛸 Drone real-time feedback</h1>
+  <div id="conn">Connecting…</div>
 
   <div class="cols">
     <div class="col">
-      <h2>遥控器 / 无人机状态</h2>
+      <h2>RC / Drone status</h2>
       <pre id="rc">—</pre>
     </div>
     <div class="col">
-      <h2>烟火检测</h2>
+      <h2>Fire & smoke detection</h2>
       <img id="vid" src="/stream" alt="detection stream">
-      <div id="st">等待检测…</div>
+      <div id="st">Waiting for detection…</div>
     </div>
   </div>
 <script>
 setInterval(async()=>{
-  // 遥控器 / 无人机状态（含自动发现的 APK 地址）
+  // RC / drone status (including the auto-discovered APK address)
   try{
     const rc=await(await fetch('/rc')).json();
     document.getElementById('rc').textContent = JSON.stringify(rc,null,2);
     const src=rc._source?(' @ '+rc._source):'';
     document.getElementById('conn').textContent = rc.success
-      ? ('RC Pro 已连接'+src+(rc.latitude?('   gps=('+rc.latitude+','+rc.longitude+')'):''))
-      : ('RC Pro 未连接'+src);
+      ? ('RC Pro connected'+src+(rc.latitude?('   gps=('+rc.latitude+','+rc.longitude+')'):''))
+      : ('RC Pro not connected'+src);
     document.getElementById('conn').style.color = rc.success ? '#8f8' : '#f88';
   }catch(e){}
-  // 火检状态
+  // fire-detection status
   try{
     const s=await(await fetch('/state')).json();
     const el=document.getElementById('st');
@@ -84,7 +84,7 @@ setInterval(async()=>{
       el.textContent=`[frame ${s.frame}] ALERT ${s.count} -> ${d}${g}`;
       el.style.color='#f55';
     }else{
-      el.textContent=`[frame ${s.frame}] 正常，无火烟`;
+      el.textContent=`[frame ${s.frame}] normal, no fire/smoke`;
       el.style.color='#5f5';
     }
   }catch(e){}
@@ -96,10 +96,10 @@ setInterval(async()=>{
 
 
 class AnnotatedStreamer:
-    """持续拉流→推理→画框→编码；内置 HTTP 服务输出 MJPEG 标注流 + JSON 状态。
+    """Continuously pull stream -> infer -> draw boxes -> encode; a built-in HTTP service serves the MJPEG annotated stream + JSON status.
 
-    复用外部传入的 FireDetectBackend（与原语共享同一个 backend 与模型），
-    不单独拉流。调用 start()/stop() 管理后台线程与 HTTP 服务生命周期。
+    Reuses the externally-provided FireDetectBackend (shares the same backend and model with the primitive),
+    without pulling the stream separately. Call start()/stop() to manage the background thread and HTTP service lifecycle.
     """
 
     def __init__(self, backend: FireDetectBackend, conf: float = 0.25, port: int = 8081):
@@ -115,9 +115,9 @@ class AnnotatedStreamer:
         self._http_thread = None
         self._http_server = None
 
-    # ── 生命周期 ───────────────────────────────────────────
+    # -- lifecycle --
     def start(self) -> bool:
-        """启动标注循环线程 + HTTP 服务。返回 web 是否成功绑定端口。"""
+        """Start the annotation loop thread + HTTP service. Returns whether the web server bound its port successfully."""
         if self._running:
             return self._http_server is not None
         self._running = True
@@ -126,7 +126,7 @@ class AnnotatedStreamer:
         return self._start_http()
 
     def stop(self) -> None:
-        """停止标注循环，关闭 HTTP 服务。"""
+        """Stop the annotation loop and shut down the HTTP service."""
         self._running = False
         if self._http_server is not None:
             try:
@@ -144,16 +144,16 @@ class AnnotatedStreamer:
         try:
             self._http_server = ThreadingHTTPServer(("0.0.0.0", self.port), _Handler)
         except OSError as e:
-            print(f"[fire_stream] ⚠ 端口 {self.port} 被占用，web 可视化未启动: {e}", flush=True)
+            print(f"[fire_stream] ⚠ port {self.port} is in use, web visualization not started: {e}", flush=True)
             return False
         self._http_thread = threading.Thread(
             target=self._http_server.serve_forever, daemon=True, name="fire-stream-http"
         )
         self._http_thread.start()
-        print(f"[fire_stream] ✅ web 可视化: http://localhost:{self.port}/", flush=True)
+        print(f"[fire_stream] ✅ web visualization: http://localhost:{self.port}/", flush=True)
         return True
 
-    # ── 供 HTTP handler 读取 ───────────────────────────────
+    # -- read by the HTTP handlers --
     def latest_jpeg(self):
         with self._lock:
             return self._latest_jpeg
@@ -163,15 +163,15 @@ class AnnotatedStreamer:
             return dict(self._state)
 
     def rc_state(self) -> dict:
-        """遥控器/无人机完整状态（/api/status + GPS），供 /rc 端点。"""
+        """Full RC / drone status (/api/status + GPS), served by the /rc endpoint."""
         return self.backend.rc_state()
 
-    # ── 后台循环 ───────────────────────────────────────────
+    # -- background loop --
     def _loop(self) -> None:
         model = self.backend._load_model()
         if model is None:
             with self._lock:
-                self._state["message"] = self.backend._last_error or "模型加载失败"
+                self._state["message"] = self.backend._last_error or "model load failed"
             return
 
         n = 0
@@ -280,7 +280,7 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="fire_detect 实时标注流服务")
+    ap = argparse.ArgumentParser(description="fire_detect real-time annotated stream service")
     ap.add_argument("--rc-host", default=os.environ.get("RC_PRO_IP", "172.20.10.3"))
     ap.add_argument("--rc-port", type=int, default=int(os.environ.get("RC_PRO_PORT", "8080")))
     ap.add_argument("--model", default=os.environ.get("FIRE_MODEL_PATH", ""))
@@ -291,8 +291,8 @@ def main() -> None:
     backend = FireDetectBackend(args.rc_host, args.rc_port, model_path=args.model, min_confidence=args.conf)
     streamer = AnnotatedStreamer(backend, conf=args.conf, port=args.port)
     streamer.start()
-    print(f"[fire_stream] 拉流 http://{args.rc_host}:{args.rc_port}/api/video  conf={args.conf}")
-    print("[fire_stream] Ctrl+C 停止")
+    print(f"[fire_stream] pulling stream http://{args.rc_host}:{args.rc_port}/api/video  conf={args.conf}")
+    print("[fire_stream] Ctrl+C to stop")
     try:
         while True:
             time.sleep(1)
