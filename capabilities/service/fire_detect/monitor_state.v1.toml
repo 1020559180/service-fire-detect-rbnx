@@ -1,0 +1,10 @@
+# 读取烟火实时监控的最新结果（含 alert/检测框/GPS/时间戳），供外部循环轮询。
+[contract]
+id      = "robonix/service/fire_detect/monitor_state"
+version = "1"
+kind    = "service"
+idl     = "fire_detect/srv/MonitorState.srv"
+description = "读取烟火实时监控的最新检测结果（alert/detections/gps/timestamp），外部循环轮询用。"
+
+[mode]
+type = "rpc"

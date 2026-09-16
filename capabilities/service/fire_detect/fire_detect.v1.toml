@@ -1,0 +1,10 @@
+# 检测无人机镜头当前画面中的烟火（火焰/烟雾），返回检测框；命中烟火时附带当前 GPS。
+[contract]
+id      = "robonix/service/fire_detect/fire_detect"
+version = "1"
+kind    = "service"
+idl     = "fire_detect/srv/FireDetect.srv"
+description = "检测无人机镜头当前画面中的烟火（火焰/烟雾），返回检测框；命中时附带当前 GPS 坐标。"
+
+[mode]
+type = "rpc"

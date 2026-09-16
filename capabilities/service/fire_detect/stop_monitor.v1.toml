@@ -1,0 +1,10 @@
+# 停止烟火实时监控：结束后台检测线程。
+[contract]
+id      = "robonix/service/fire_detect/stop_monitor"
+version = "1"
+kind    = "service"
+idl     = "fire_detect/srv/StopMonitor.srv"
+description = "停止烟火实时监控（结束后台检测线程）。"
+
+[mode]
+type = "rpc"

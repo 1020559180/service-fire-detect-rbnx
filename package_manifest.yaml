@@ -1,0 +1,45 @@
+manifestVersion: 1
+
+package:
+  name: robonix.service.fire_detect
+  version: 0.1.0
+  vendor: xiaolu Wang
+  description: 无人机烟火检测服务 — 从 DJI 桥接 APK 拉取 MJPEG 帧，YOLO 识别火焰/烟雾；命中时附带当前 GPS 坐标
+  license: MulanPSL-2.0
+  tags: [fire, smoke, detection, vision, drone]
+  maintainers:
+    - xiaolu Wang <drqzkk@163.com>
+
+build: bash scripts/build.sh
+
+start: bash scripts/start.sh
+
+stop: |
+  pkill -TERM -f "[p]ython3 -m fire_detect.driver" 2>/dev/null || true
+  sleep 1
+  pkill -KILL -f "[p]ython3 -m fire_detect.driver" 2>/dev/null || true
+
+capabilities:
+  - name: robonix/service/fire_detect/driver
+  - name: robonix/service/fire_detect/fire_detect
+  - name: robonix/service/fire_detect/start_monitor
+  - name: robonix/service/fire_detect/stop_monitor
+  - name: robonix/service/fire_detect/monitor_state
+
+config:
+  rc_pro_ip:
+    description: DJI 桥接 APK 所在地址（RC Pro IP）
+    type: string
+    default: 172.20.10.2
+  rc_pro_port:
+    description: DJI 桥接 APK WebServer 端口
+    type: integer
+    default: 8080
+  model_path:
+    description: 烟火 YOLO 权重路径（.pt / .engine / .onnx），留空则使用默认 yolov8n
+    type: string
+    default: ""
+  min_confidence:
+    description: 默认置信度阈值（0~1）
+    type: number
+    default: 0.4
